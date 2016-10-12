@@ -86,11 +86,12 @@ def checkem():
     matches.append(text)
     flask.session["matches"] = matches
 
-    return jsonify(result=rslt)
+  rslt = {"enough_matches": len(matches) >= flask.session["target_count"]}
+  return jsonify(result=rslt)
 
-    ## Choose page:  Solved enough, or keep going? 
-  if len(matches) >= flask.session["target_count"]:
-    return flask.redirect(url_for("success"))
+  # if len(matches) >= flask.session["target_count"]:
+  # return flask.redirect(url_for("success"))
+  
 
 
 @app.route("/_check", methods = ["POST"])
