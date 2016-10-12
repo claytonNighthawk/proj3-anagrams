@@ -49,8 +49,8 @@
     </div>
   </div>
 <!-- Vocabularly words layed out in 6 columns;
-  -- bootstrap may collapse to fewer columns and
-  -- more rows if the window is narrow.
+     bootstrap may collapse to fewer columns and
+     more rows if the window is narrow.
   -->
 <div class="row">
   {% for word in g.vocab %}
@@ -89,6 +89,25 @@
 </div></div>
 
 <br />
+<script>
+$("#attempt").keyup(function(event) {
+    var txt = $("#attempt").val();  // Current content of the input field
+    var keycode = event.which;      // They key that just went up
+    var letter = String.fromCharCode(keycode);
+
+    if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return }
+
+    $.getJSON("/_checkem", {text: txt},
+        function(data) {
+          rsval = data.result.injumble;
+          console.log("rsval: " + rsval);
+
+        }
+      )
+
+
+</script>
+
 
 {% if session.matches|length is not equalto 0  %}
 <h2>You found </h2>

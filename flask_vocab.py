@@ -71,6 +71,28 @@ def success():
 #   a JSON request handler
 #######################
 
+@app.route("/_checkem")
+def checkem():
+  app.logger.debug("Entering letter by letter check")
+  text = request.args.get("text", type=str)
+  jumble = flask.session["jumble"]
+  matches = flask.session.get("matches", []) # Default to empty list
+
+  ## Is it good? 
+  in_jumble = LetterBag(jumble).contains(text)
+  matched = WORDS.has(text)
+
+  if matched and in_jumble and not (text in matches):
+    matches.append(text)
+    flask.session["matches"] = matches
+
+    return jsonify(result=rslt)
+
+    ## Choose page:  Solved enough, or keep going? 
+  if len(matches) >= flask.session["target_count"]:
+    return flask.redirect(url_for("success"))
+
+
 @app.route("/_check", methods = ["POST"])
 def check():
   """
