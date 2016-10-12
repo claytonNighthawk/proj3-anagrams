@@ -99,9 +99,10 @@ $("#attempt").keyup(function(event) {
 
     $.getJSON("/_checkem", {text: txt},
         function(data) {
-          rsval = data.result.injumble;
-          console.log("rsval: " + rsval);
-          if (rsval) {
+          enough_matches = data.result.enough_matches;
+          new_match = data.result.new_match;
+          console.log("enough_matches: " + enough_matches + "\n" + "new_match: " + new_match);
+          if (new_match) {
             
           }
 

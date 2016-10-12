@@ -85,8 +85,8 @@ def checkem():
   if matched and in_jumble and not (text in matches):
     matches.append(text)
     flask.session["matches"] = matches
-
-  rslt = {"enough_matches": len(matches) >= flask.session["target_count"]}
+   
+  rslt = {"enough_matches": len(matches) >= flask.session["target_count"], "new_match": matched and in_jumble and not (text in matches)}
   return jsonify(result=rslt)
 
   # if len(matches) >= flask.session["target_count"]:
