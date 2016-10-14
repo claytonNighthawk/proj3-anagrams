@@ -103,7 +103,7 @@ $("#attempt").keyup(function(event) {
         var keycode = event.which;      // The key that just went up
         var letter = String.fromCharCode(keycode);
 
-        if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return }
+        if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return } 
 
         $.getJSON("/_checkem", {text: txt},
             function(data) {
