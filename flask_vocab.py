@@ -40,116 +40,47 @@ WORDS = Vocab( CONFIG.vocab )
 @app.route("/")
 @app.route("/index")
 def index():
-  flask.g.vocab = WORDS.as_list();
-  flask.session["target_count"] = min( len(flask.g.vocab), CONFIG.success_at_count )
-  flask.session["jumble"] = jumbled(flask.g.vocab, flask.session["target_count"])
-  flask.session["matches"] = [ ]
-  app.logger.debug("Session variables have been set")
-  assert flask.session["matches"] == [ ]
-  assert flask.session["target_count"] > 0
-  app.logger.debug("At least one seems to be set correctly")
-  return flask.render_template('vocab.html')
-
-@app.route("/keep_going")
-def keep_going():
-  """
-  After initial use of index, we keep the same scrambled
-  word and try to get more matches
-  """
-  flask.g.vocab = WORDS.as_list();
-  return flask.render_template('vocab.html')
-  
+    flask.g.vocab = WORDS.as_list();
+    flask.session["target_count"] = min( len(flask.g.vocab), CONFIG.success_at_count )
+    flask.session["jumble"] = jumbled(flask.g.vocab, flask.session["target_count"])
+    flask.session["matches"] = [ ]
+    app.logger.debug("Session variables have been set")
+    assert flask.session["matches"] == [ ]
+    assert flask.session["target_count"] > 0
+    app.logger.debug("At least one seems to be set correctly")
+    return flask.render_template('vocab.html') 
 
 @app.route("/success")
 def success():
-  return flask.render_template('success.html')
-
-#######################
-# Form handler.  
-# CIS 322 (399se) note:
-#   You'll need to change this to a
-#   a JSON request handler
-#######################
-
-@app.route("/_checkem")
-def checkem():
-  app.logger.debug("Entering letter by letter check")
-  text = request.args.get("text", type=str)
-  jumble = flask.session["jumble"]
-  matches = flask.session.get("matches", []) # Default to empty list
-
-  ## Is it good? 
-  in_jumble = LetterBag(jumble).contains(text)
-  matched = WORDS.has(text)
-
-  if matched and in_jumble and not (text in matches):
-    matches.append(text)
-    flask.session["matches"] = matches
-   
-  rslt = {"enough_matches": len(matches) >= flask.session["target_count"], "new_match": matched and in_jumble and not (text in matches)}
-  return jsonify(result=rslt)
-
-  # if len(matches) >= flask.session["target_count"]:
-  # return flask.redirect(url_for("success"))
-  
-
-
-@app.route("/_check", methods = ["POST"])
-def check():
-  """
-  User has submitted the form with a word ('attempt')
-  that should be formed from the jumble and on the
-  vocabulary list.  We respond depending on whether
-  the word is on the vocab list (therefore correctly spelled),
-  made only from the jumble letters, and not a word they
-  already found.
-  """
-  app.logger.debug("Entering check")
-
-  ## The data we need, from form and from cookie
-  text = request.form["attempt"]
-  jumble = flask.session["jumble"]
-  matches = flask.session.get("matches", []) # Default to empty list
-
-  ## Is it good? 
-  in_jumble = LetterBag(jumble).contains(text)
-  matched = WORDS.has(text)
-
-  ## Respond appropriately 
-  if matched and in_jumble and not (text in matches):
-    ## Cool, they found a new word
-    matches.append(text)
-    flask.session["matches"] = matches
-  elif text in matches:
-    flask.flash("You already found {}".format(text))
-  elif not matched:
-    flask.flash("{} isn't in the list of words".format(text))
-  elif not in_jumble:
-    flask.flash('"{}" can\'t be made from the letters {}'.format(text,jumble))
-  else:
-    app.logger.debug("This case shouldn't happen!")
-    assert False  # Raises AssertionError
-
-  ## Choose page:  Solved enough, or keep going? 
-  if len(matches) >= flask.session["target_count"]:
-    return flask.redirect(url_for("success"))
-  else:
-    return flask.redirect(url_for("keep_going"))
+    app.logger.debug("redirecting!")
+    return flask.render_template('success.html')
 
 ###############
 # AJAX request handlers 
 #   These return JSON, rather than rendering pages. 
 ###############
 
-@app.route("/_example")
-def example():
-  """
-  Example ajax request handler
-  """
-  app.logger.debug("Got a JSON request");
-  rslt = { "key": "value" }
-  return jsonify(result=rslt)
+@app.route("/_checkem")
+def checkem():
+    text = request.args.get("text", type=str)
+    jumble = flask.session["jumble"]
+    matches = flask.session.get("matches", []) # Default to empty list
 
+    ## Is it good? 
+    in_jumble = LetterBag(jumble).contains(text)
+    matched = WORDS.has(text)
+
+    #set flags to be used in the jQuery
+    rslt = {"new_match": False, "enough_matches": False}
+    if matched and in_jumble and not (text in matches):
+        matches.append(text)
+        flask.session["matches"] = matches
+        rslt["new_match"] = True
+
+    if len(matches) >= flask.session["target_count"]:
+        rslt["enough_matches"] = True
+
+    return jsonify(result=rslt)
 
 #################
 # Functions used within the templates
@@ -162,26 +93,26 @@ def format_filt( something ):
     the Jinja2 code
     """
     return "Not what you asked for"
-  
+   
+
 ###################
 #   Error handlers
 ###################
 @app.errorhandler(404)
 def error_404(e):
-  app.logger.warning("++ 404 error: {}".format(e))
-  return flask.render_template('404.html'), 404
+    app.logger.warning("++ 404 error: {}".format(e))
+    return flask.render_template('404.html'), 404
 
 @app.errorhandler(500)
 def error_500(e):
-   app.logger.warning("++ 500 error: {}".format(e))
-   assert app.debug == False #  I want to invoke the debugger
-   return flask.render_template('500.html'), 500
+     app.logger.warning("++ 500 error: {}".format(e))
+     assert app.debug == False #  I want to invoke the debugger
+     return flask.render_template('500.html'), 500
 
 @app.errorhandler(403)
 def error_403(e):
-  app.logger.warning("++ 403 error: {}".format(e))
-  return flask.render_template('403.html'), 403
-
+    app.logger.warning("++ 403 error: {}".format(e))
+    return flask.render_template('403.html'), 403
 
 
 #############

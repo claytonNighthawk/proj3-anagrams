@@ -14,7 +14,7 @@
 
 <!-- jquery; CDN load is usually quick because it's likely cached -->
 <script type="text/javascript"
-     src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+         src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
 </script>
 
 <!-- Bootstrap stylesheet let's us have a 'responsive' layout; -->
@@ -25,7 +25,7 @@
 <link rel="stylesheet"
  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
  integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
-  crossorigin="anonymous">
+    crossorigin="anonymous">
 
 <!-- Latest compiled and minified JavaScript -->
 <script
@@ -43,96 +43,89 @@
 <body>
 <div class="container">
 
-  <div class="row">
-    <div class="col-xs-6 text-center">
-      <h1>Words</h1>
-    </div>
-  </div>
-<!-- Vocabularly words layed out in 6 columns;
-     bootstrap may collapse to fewer columns and
-     more rows if the window is narrow.
-  -->
-<div class="row">
-  {% for word in g.vocab %}
-    <div class="col-xs-2 text-center"> {{ word }} </div>
-    {% if loop.index is divisibleby 3 %}
-    </div> <!-- row -->
     <div class="row">
-    {% endif %}
-  {% endfor %}
+        <div class="col-xs-6 text-center">
+            <h1>Words</h1>
+        </div>
+    </div>
+<!-- Vocabularly words layed out in 6 columns;
+         bootstrap may collapse to fewer columns and
+         more rows if the window is narrow.
+    -->
+<div class="row">
+    {% for word in g.vocab %}
+        <div class="col-xs-2 text-center"> {{ word }} </div>
+        {% if loop.index is divisibleby 3 %}
+        </div> <!-- row -->
+        <div class="row">
+        {% endif %}
+    {% endfor %}
 </div> <!-- row -->
 
 <br />
 
 <div class="row">
-  <div class="col-xs-6 text-center">
-   Use letters from
-  </div>
-  </div><div class="row">
-  <div class="col-xs-6 text-center lead">
-    <strong>{{ session.jumble }}</strong>
-  </div>
-  </div><div class="row">
-  <div class="col-xs-6 text-center">
-    to spell {{session.target_count}} words from the list.
-  </div> <!-- col -->
+    <div class="col-xs-6 text-center">
+     Use letters from
+    </div>
+    </div><div class="row">
+    <div class="col-xs-6 text-center lead">
+        <strong>{{ session.jumble }}</strong>
+    </div>
+    </div><div class="row">
+    <div class="col-xs-6 text-center">
+        to spell {{session.target_count}} words from the list.
+    </div> <!-- col -->
 </div> <!-- row -->
 <br />
 <div class="row">
-  <div class="col-xs-6 text-center">
-  <form id="entry" method="POST" action="/_check">
-    <label for="attempt">Word:</label>
-    <input id="attempt" name="attempt" type="text" width="15"
-      autocomplete="off"  autofocus />
-    <input type="submit" name="try" />
-  </form>
+    <div class="col-xs-6 text-center">
+    <form id="entry">
+        <label for="attempt">Word:</label>
+        <input id="attempt" name="attempt" type="text" width="15"
+            autocomplete="off"  autofocus />
+        <!-- <input type="submit" name="try" /> -->
+    </form>
 </div></div>
+
+<p id="response"> </p>  <!-- JavaScript will insert text here -->
+<p id="matches">Matches: </p> <!-- Illustration of inserting graphics into page -->
 
 <br />
 <script>
+// Suppress normal form submission
+$("#entry").submit( function(event) {
+     event.preventDefault();
+});
+
 $("#attempt").keyup(function(event) {
-    var txt = $("#attempt").val();  // Current content of the input field
-    var keycode = event.which;      // They key that just went up
-    var letter = String.fromCharCode(keycode);
+        var txt = $("#attempt").val();  // Current content of the input field
+        var keycode = event.which;      // The key that just went up
+        var letter = String.fromCharCode(keycode);
 
-    if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return }
+        if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return }
 
-    $.getJSON("/_checkem", {text: txt},
-        function(data) {
-          enough_matches = data.result.enough_matches;
-          new_match = data.result.new_match;
-          console.log("enough_matches: " + enough_matches + "\n" + "new_match: " + new_match);
-          if (new_match) {
-            
-          }
-
-        }
-      )
-
+        $.getJSON("/_checkem", {text: txt},
+            function(data) {
+                new_match = data.result.new_match;
+                enough_matches = data.result.enough_matches;
+                if (new_match) {            
+                    $("#response").html("NEW MATCH! ");
+                    $("#attempt").val("");
+                    $("#matches").append(txt + " ")
+                    
+                    if (enough_matches){
+                        redirect_URL = window.location.href + "success";
+                        $(location).attr('href', redirect_URL);
+                    }
+                } else {
+                    $("#response").html(txt + " "); 
+                }        
+            }
+        );
+});
 
 </script>
-
-
-{% if session.matches|length is not equalto 0  %}
-<h2>You found </h2>
-<p id="results">
-  {% for match in session.matches %}
-  {{ match }} 
-  {% endfor %}
-</p>
-{% endif %}
-
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <!-- Mismatch, already found, etc. "flashed" from Python -->
-    {% for message in messages %}
-      <p class="message">{{ message }}</p>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
-
 
  </div> <!-- container -->
 </body> </html>
